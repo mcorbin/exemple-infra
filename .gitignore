@@ -1,3 +1,5 @@
 seed.img
 output-qemu
 packer_cache
+.terraform
+terraform/graph.png

@@ -1,0 +1,19 @@
+#cloud-config
+---
+manage_etc_hosts: true
+
+package_update: true
+package_upgrade: true
+
+write_files:
+  - path: /etc/network/interfaces
+    content: |
+      source /etc/network/interfaces.d/*.cfg
+  - path: /etc/network/interfaces.d/01-eth1.cfg
+    permissions: "0644"
+    content: |
+      auto eth1
+      iface eth1 inet dhcp
+
+runcmd:
+  - "ifup eth1"
