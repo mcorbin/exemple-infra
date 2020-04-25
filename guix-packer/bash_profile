@@ -1,0 +1,2 @@
+export TERM=vt100
+PS1='\u@\h:\w\$'
