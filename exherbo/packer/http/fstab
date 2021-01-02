@@ -1,0 +1,4 @@
+# <fs>       <mountpoint>    <type>    <opts>      <dump/pass>
+/dev/vda1    /boot           ext2      defaults    0 0
+/dev/vda2    /               ext4      defaults    0 0
+EOF

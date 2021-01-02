@@ -1,0 +1,100 @@
+{
+    "variables": {
+        "image_name": "exherbo",
+        "iso_checksum_type": "sha256",
+        "iso_checksum": "899ae3034557f60ecd5241e90ef3b39d1762d047247ba9f1e61143303002dc19",
+        "iso_url": "https://osdn.net/frs/redir.php?m=dotsrc&f=%2Fstorage%2Fg%2Fs%2Fsy%2Fsystemrescuecd%2Freleases%2F6.1.7%2Fsystemrescuecd-amd64-6.1.7.iso",
+        "ssh_password": "foobarbaz",
+        "kernel_url": "https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"
+    },
+    "builders": [
+        {
+            "boot_command": [
+                "<wait15>",
+                "<enter>",
+                "<wait45>",
+                "gdisk /dev/vda<enter>",
+                "n<enter>",
+                "1<enter>",
+                "<enter>",
+                "+500M<enter>",
+                "ef02<enter>",
+                "n<enter>",
+                "2<enter>",
+                "<enter>",
+                "<enter>",
+                "8303<enter>",
+                "w<enter>Y<enter><wait2>",
+                "mkfs.ext2 /dev/vda1<enter><wait2>",
+                "mkfs.ext4 /dev/vda2<enter><wait2>",
+                "mkdir /mnt/exherbo && mount /dev/vda2 /mnt/exherbo && cd /mnt/exherbo<enter>",
+                "curl -L -O https://dev.exherbo.org/stages/exherbo-x86_64-pc-linux-gnu-current.tar.xz<enter><wait210>",
+                "tar xJpf exherbo*xz<enter><wait60>",
+                "curl -o /mnt/exherbo/etc/fstab http://{{ .HTTPIP }}:{{ .HTTPPort }}/fstab<enter><wait4>",
+                "mount -o rbind /sys /mnt/exherbo/sys/<enter>",
+                "mount -t proc none /mnt/exherbo/proc/<enter>",
+                "mount /dev/vda1 /mnt/exherbo/boot/<enter>",
+                "cp /etc/resolv.conf /mnt/exherbo/etc/resolv.conf<enter>",
+                "env -i TERM=$TERM SHELL=/bin/bash HOME=$HOME $(which chroot) /mnt/exherbo /bin/bash<enter>",
+                "source /etc/profile<enter>",
+                "export PS1=\"(chroot) $PS1\"<enter>",
+                "cave sync<enter><wait60>",
+                "curl -L -O {{user `kernel_url`}}<enter><wait90>",
+                "mkdir /boot/grub<enter>",
+                "tar xJpf linux*xz<enter><wait60>",
+                "rm linux*xz<enter>",
+                "cd linux*<enter>",
+                "curl -o .config http://{{ .HTTPIP }}:{{ .HTTPPort }}/config<enter><wait4>",
+                "make<enter><wait1800>",
+                "make modules_install<enter><wait30>",
+                "cp arch/x86/boot/bzImage /boot/kernel<enter>",
+                "cave resolve world -c<enter><wait60>",
+                "cave resolve --execute --preserve-world --skip-phase test sys-apps/systemd<enter><wait120>",
+                "grub-install /dev/vda<enter><wait5>",
+                "curl -o /boot/grub/grub.cfg http://{{ .HTTPIP }}:{{ .HTTPPort }}/grub.cfg<enter><wait4>",
+                "kernel-install add 5.8.5 /boot/vmlinuz-5.8.5<enter><wait2>",
+                "passwd<enter>",
+                "{{user `ssh_password`}}<enter>",
+                "{{user `ssh_password`}}<enter>",
+                "<leftCtrlOn>d<leftCtrlOff>",
+                "reboot<enter>"
+            ],
+            "boot_key_interval": "200ms",
+            "communicator": "ssh",
+            "disk_compression": true,
+            "disk_image": false,
+            "disk_interface": "virtio",
+            "disk_size": "10000M",
+            "format": "qcow2",
+            "http_directory": "http",
+            "iso_checksum": "{{user `iso_checksum`}}",
+            "iso_url": "{{user `iso_url`}}",
+            "net_device": "virtio-net",
+            "qemuargs": [
+                [
+                    "-drive",
+                    "file=output-qemu/{{user `image_name`}}.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2"
+                ],
+                [
+                    "-m",
+                    "1000M"
+                ],
+                [
+                    "-smp",
+                    "3"
+                ]
+            ],
+            "ssh_handshake_attempts": 900,
+            "ssh_password": "{{user `ssh_password`}}",
+            "ssh_port": 22,
+            "ssh_timeout": "300m",
+            "ssh_username": "root",
+            "type": "qemu",
+            "use_default_display": true,
+            "vm_name": "{{user `image_name`}}.qcow2",
+            "vnc_port_max": 5910,
+            "vnc_port_min": 5910
+        }
+    ]
+}
+
